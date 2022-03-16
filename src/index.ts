@@ -1,59 +1,14 @@
-import { Buffer } from "buffer";
 import _ from "lodash";
-
-export interface CastOptions {
-  trimStrings?: boolean;
-}
-
-export enum Types {
-  Integer,
-  Binary,
-  Float,
-  Boolean,
-  String,
-  Decimal
-}
-
-export interface SchemaFieldOptions {
-  default?: any;
-  virtual?: boolean;
-}
-
-export type SchemaFieldTuple = [Types, SchemaFieldOptions];
-export type SchemaField = SchemaFieldTuple;
-export type Schema = Record<string, SchemaField>;
-export type CastFunction = (value: any) => any;
-export type Struct = Record<string, any>;
-export type UntypedParams = Record<string, any>;
-export type ChangesetChange = Record<string, any>;
-export interface ChangesetError {
-  field: string;
-  message: string;
-}
-
-export const TypeMapper: Record<Types, CastFunction> = {
-  [Types.Integer]: Number,
-  [Types.Float]: Number,
-  [Types.String]: (value: any) => (value ? String(value) : null),
-  [Types.Decimal]: (value: any) => (value ? String(value) : null),
-  [Types.Binary]: Buffer.from,
-  [Types.Boolean]: Boolean
-};
-
-export const NumberValidators = {
-  lessThan: (value: number, expected: number) => {
-    return value < expected;
-  },
-  greaterThan: (value: number, expected: number) => {
-    return value > expected;
-  },
-  greaterThanOrEqualTo: (value: number, expected: number) => {
-    return value >= expected;
-  },
-  lessThanOrEqualTo: (value: number, expected: number) => {
-    return value >= expected;
-  }
-};
+import {
+  Schema,
+  SchemaFieldOptions,
+  Struct,
+  ChangesetError,
+  CastOptions
+} from "./common";
+import NumberValidators from "./numberValidators";
+import TypeMapper from "./typeMapper";
+import Types from "./types";
 
 const LengthValidators = {
   min: (value: string, length: number) => {
@@ -219,6 +174,21 @@ export class Changeset<T extends Struct = any> {
         message: `length is invalid, expected: ${validatorKey}: ${expected}`
       });
     });
+    return this;
+  }
+
+  validateFormat(field: string, format: RegExp, message?: string) {
+    const value = this.getField(field);
+    if (typeof value !== "string") {
+      return this;
+    }
+
+    if (!value.match(format)) {
+      this.errors.push({
+        field,
+        message: message ?? `has invalid format`
+      });
+    }
     return this;
   }
 

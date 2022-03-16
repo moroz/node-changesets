@@ -1,40 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Changeset = exports.SchemaBuilder = exports.NumberValidators = exports.TypeMapper = exports.Types = void 0;
+exports.Changeset = exports.SchemaBuilder = void 0;
 const tslib_1 = require("tslib");
-const buffer_1 = require("buffer");
 const lodash_1 = tslib_1.__importDefault(require("lodash"));
-var Types;
-(function (Types) {
-    Types[Types["Integer"] = 0] = "Integer";
-    Types[Types["Binary"] = 1] = "Binary";
-    Types[Types["Float"] = 2] = "Float";
-    Types[Types["Boolean"] = 3] = "Boolean";
-    Types[Types["String"] = 4] = "String";
-    Types[Types["Decimal"] = 5] = "Decimal";
-})(Types = exports.Types || (exports.Types = {}));
-exports.TypeMapper = {
-    [Types.Integer]: Number,
-    [Types.Float]: Number,
-    [Types.String]: (value) => (value ? String(value) : null),
-    [Types.Decimal]: (value) => (value ? String(value) : null),
-    [Types.Binary]: buffer_1.Buffer.from,
-    [Types.Boolean]: Boolean
-};
-exports.NumberValidators = {
-    lessThan: (value, expected) => {
-        return value < expected;
-    },
-    greaterThan: (value, expected) => {
-        return value > expected;
-    },
-    greaterThanOrEqualTo: (value, expected) => {
-        return value >= expected;
-    },
-    lessThanOrEqualTo: (value, expected) => {
-        return value >= expected;
-    }
-};
+const numberValidators_1 = tslib_1.__importDefault(require("./numberValidators"));
+const typeMapper_1 = tslib_1.__importDefault(require("./typeMapper"));
+const types_1 = tslib_1.__importDefault(require("./types"));
 const LengthValidators = {
     min: (value, length) => {
         return value.length >= length;
@@ -62,27 +33,27 @@ class SchemaBuilder {
         this.fields[name] = [type, mergedOpts];
     }
     integer(name, opts) {
-        this.addField(name, Types.Integer, opts);
+        this.addField(name, types_1.default.Integer, opts);
         return this;
     }
     float(name, opts) {
-        this.addField(name, Types.Float, opts);
+        this.addField(name, types_1.default.Float, opts);
         return this;
     }
     string(name, opts) {
-        this.addField(name, Types.String, opts);
+        this.addField(name, types_1.default.String, opts);
         return this;
     }
     boolean(name, opts) {
-        this.addField(name, Types.Boolean, opts);
+        this.addField(name, types_1.default.Boolean, opts);
         return this;
     }
     binary(name, opts) {
-        this.addField(name, Types.Binary, opts);
+        this.addField(name, types_1.default.Binary, opts);
         return this;
     }
     decimal(name, opts) {
-        this.addField(name, Types.Decimal, opts);
+        this.addField(name, types_1.default.Decimal, opts);
         return this;
     }
 }
@@ -99,7 +70,7 @@ class Changeset {
         if (!type === undefined) {
             throw new Error(`unknown field ${field} given to cast.`);
         }
-        return exports.TypeMapper[type[0]];
+        return typeMapper_1.default[type[0]];
     }
     getFieldOptions(field) {
         var _a;
@@ -141,7 +112,7 @@ class Changeset {
         if (typeof value !== "number")
             return this;
         Object.entries(opts).forEach(([validatorKey, expected]) => {
-            const validator = exports.NumberValidators[validatorKey];
+            const validator = numberValidators_1.default[validatorKey];
             if (!validator || validator(value, expected))
                 return;
             const errorType = lodash_1.default.snakeCase(validatorKey).replace(/_/g, " ");
@@ -166,6 +137,19 @@ class Changeset {
                 message: `length is invalid, expected: ${validatorKey}: ${expected}`
             });
         });
+        return this;
+    }
+    validateFormat(field, format, message) {
+        const value = this.getField(field);
+        if (typeof value !== "string") {
+            return this;
+        }
+        if (!value.match(format)) {
+            this.errors.push({
+                field,
+                message: message !== null && message !== void 0 ? message : `has invalid format`
+            });
+        }
         return this;
     }
     isChanged(field) {

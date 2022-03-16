@@ -1,36 +1,6 @@
-export interface CastOptions {
-    trimStrings?: boolean;
-}
-export declare enum Types {
-    Integer = 0,
-    Binary = 1,
-    Float = 2,
-    Boolean = 3,
-    String = 4,
-    Decimal = 5
-}
-export interface SchemaFieldOptions {
-    default?: any;
-    virtual?: boolean;
-}
-export declare type SchemaFieldTuple = [Types, SchemaFieldOptions];
-export declare type SchemaField = SchemaFieldTuple;
-export declare type Schema = Record<string, SchemaField>;
-export declare type CastFunction = (value: any) => any;
-export declare type Struct = Record<string, any>;
-export declare type UntypedParams = Record<string, any>;
-export declare type ChangesetChange = Record<string, any>;
-export interface ChangesetError {
-    field: string;
-    message: string;
-}
-export declare const TypeMapper: Record<Types, CastFunction>;
-export declare const NumberValidators: {
-    lessThan: (value: number, expected: number) => boolean;
-    greaterThan: (value: number, expected: number) => boolean;
-    greaterThanOrEqualTo: (value: number, expected: number) => boolean;
-    lessThanOrEqualTo: (value: number, expected: number) => boolean;
-};
+import { Schema, SchemaFieldOptions, Struct, ChangesetError, CastOptions } from "./common";
+import NumberValidators from "./numberValidators";
+import Types from "./types";
 declare const LengthValidators: {
     min: (value: string, length: number) => boolean;
     max: (value: string, length: number) => boolean;
@@ -60,6 +30,7 @@ export declare class Changeset<T extends Struct = any> {
     validateRequired(fields: string[]): this;
     validateNumber(field: string, opts: Partial<Record<keyof typeof NumberValidators, number>>): this;
     validateLength(field: string, opts: Partial<Record<keyof typeof LengthValidators, number>>): this;
+    validateFormat(field: string, format: RegExp, message?: string): this;
     isChanged(field: string): boolean;
     getChange(field: string): any;
     getField(field: string): any;
