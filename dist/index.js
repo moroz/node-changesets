@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Changeset = exports.SchemaBuilder = void 0;
 const tslib_1 = require("tslib");
-const lodash_1 = tslib_1.__importDefault(require("lodash"));
+const lodash_1 = tslib_1.__importStar(require("lodash"));
 const numberValidators_1 = tslib_1.__importDefault(require("./numberValidators"));
 const typeMapper_1 = tslib_1.__importDefault(require("./typeMapper"));
 const types_1 = tslib_1.__importDefault(require("./types"));
@@ -190,6 +190,15 @@ class Changeset {
                 return Object.assign(Object.assign({}, acc), { [relation]: { connect: { id: value } } });
             }
             return Object.assign(Object.assign({}, acc), { [key]: value !== null && value !== void 0 ? value : opts.default });
+        }, {});
+    }
+    toSnakeCaseParams() {
+        return Object.entries(this.changes).reduce((acc, [key, value]) => {
+            const opts = this.getFieldOptions(key);
+            if (opts.virtual)
+                return acc;
+            const snakeKey = (0, lodash_1.snakeCase)(key);
+            return Object.assign(Object.assign({}, acc), { [snakeKey]: value !== null && value !== void 0 ? value : opts.default });
         }, {});
     }
     addError(field, message) {

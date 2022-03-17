@@ -39,6 +39,7 @@ export declare class Changeset<T extends Struct = any> {
     applyChanges(): Record<string, any>;
     toPromise(): Promise<this>;
     toPrismaParams(): T;
+    toSnakeCaseParams(): T;
     addError(field: keyof Schema, message: string): this;
     putChange(field: keyof Schema, value: any): this;
 }

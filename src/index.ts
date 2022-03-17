@@ -1,4 +1,4 @@
-import _ from "lodash";
+import _, { snakeCase } from "lodash";
 import {
   Schema,
   SchemaFieldOptions,
@@ -236,6 +236,16 @@ export class Changeset<T extends Struct = any> {
         return { ...acc, [relation]: { connect: { id: value } } };
       }
       return { ...acc, [key]: value ?? opts.default };
+    }, {}) as T;
+  }
+
+  toSnakeCaseParams() {
+    return Object.entries(this.changes).reduce((acc, [key, value]) => {
+      const opts = this.getFieldOptions(key);
+      if (opts.virtual) return acc;
+
+      const snakeKey = snakeCase(key);
+      return { ...acc, [snakeKey]: value ?? opts.default };
     }, {}) as T;
   }
 
